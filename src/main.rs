@@ -1,5 +1,6 @@
 use clap::{Parser};
-
+use curl::easy::{Easy, List};
+use anyhow::Result;
 
 #[derive(clap::Parser, Debug)]
 #[clap(author = "Tanisha Banik", version="1.0.0", about="Software Developer")]
@@ -31,8 +32,15 @@ pub enum Operations {
     },
 }
 
-fn main() {
-    let args = CliArgs::parse();
-
-    println!("Hello, world!");
+fn main() -> Result<()>{
+    // let args = CliArgs::parse();
+    let mut handle = Easy::new();
+    let mut list = List::new();
+    list.append("X-Docker-Token: true");
+    handle.verbose(true)?;
+    handle.url("https://index.docker.io/v1/repositories/centos/images")?;
+    handle.http_headers(list)?;
+    handle.perform()?;
+    // println!("Hello, world!");
+    Ok(())
 }
