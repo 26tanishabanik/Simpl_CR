@@ -1,9 +1,12 @@
 use clap::{Parser};
 use curl::easy::{Easy, List};
 use anyhow::Result;
+use std::collections::HashMap;
+use std::io::{stdout, Read, Write};
+use std::env;
 
 #[derive(clap::Parser, Debug)]
-#[clap(author = "Tanisha Banik", version="1.0.0", about="Software Developer")]
+#[clap(author = "Simpl_CR", version="1.0.0", about="Container Runtime")]
 struct CliArgs {
     // #[clap(subcommand)]
     #[clap(short, long, value_parser, help="pull image from a public image repository", default_value_t=false)]
@@ -32,14 +35,24 @@ pub enum Operations {
     },
 }
 
+
+
+
 fn main() -> Result<()>{
     // let args = CliArgs::parse();
     let mut handle = Easy::new();
     let mut list = List::new();
-    list.append("X-Docker-Token: true");
+    let token: &str = &env::var("TOKEN").expect("$TOKEN is not set");;
+    let header = format!("{}{}", "Authorization: Bearer ", token);
+    list.append(&header);
     handle.verbose(true)?;
-    handle.url("https://index.docker.io/v1/repositories/centos/images")?;
+    handle.url("https://registry-1.docker.io/v2/ustclug/centos/tags/list")?;
     handle.http_headers(list)?;
+    handle.write_function(|data| {
+        println!("{:?}", data);
+        stdout().write_all(data).unwrap();
+        Ok(data.len())
+    })?;
     handle.perform()?;
     // println!("Hello, world!");
     Ok(())
